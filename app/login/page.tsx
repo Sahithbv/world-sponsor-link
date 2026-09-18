@@ -1,189 +1,223 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { supabase } from "../../lib/supabase";
 
 export default function LoginPage() {
+  const router = useRouter();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  function handleLogin(e: React.FormEvent) {
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
 
-    alert("Login system will be connected to the database soon.");
+    setError("");
+    setLoading(true);
+
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      setError(error.message);
+      setLoading(false);
+      return;
+    }
+
+    router.push("/dashboard");
   }
 
   return (
-    <main className="min-h-screen bg-black text-white">
-
-      {/* HEADER */}
-
-      <nav className="border-b border-white/10">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
-
-          <a href="/" className="flex items-center gap-3">
-
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-600 font-bold">
-              W
-            </div>
-
-            <div>
-              <div className="font-bold">
-                World Sponsor Link
-              </div>
-
-              <div className="text-xs text-gray-500">
-                WSL
-              </div>
-            </div>
-
-          </a>
-
-          <a
-            href="/"
-            className="text-sm text-gray-400 transition hover:text-white"
+    <main
+      style={{
+        minHeight: "100vh",
+        background: "#050505",
+        color: "white",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "40px 20px",
+      }}
+    >
+      <div
+        style={{
+          width: "100%",
+          maxWidth: "520px",
+        }}
+      >
+        <div style={{ textAlign: "center", marginBottom: "30px" }}>
+          <div
+            style={{
+              width: "68px",
+              height: "68px",
+              borderRadius: "18px",
+              background: "#6d00ff",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              margin: "0 auto 25px",
+              fontSize: "30px",
+              fontWeight: "bold",
+            }}
           >
-            ← Back to home
-          </a>
-
-        </div>
-      </nav>
-
-
-      {/* LOGIN */}
-
-      <section className="flex min-h-[calc(100vh-81px)] items-center justify-center px-6 py-16">
-
-        <div className="w-full max-w-md">
-
-          {/* TITLE */}
-
-          <div className="text-center">
-
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-600 text-xl font-bold">
-              W
-            </div>
-
-            <h1 className="mt-7 text-3xl font-bold">
-              Welcome back
-            </h1>
-
-            <p className="mt-3 text-gray-400">
-              Sign in to your World Sponsor Link account.
-            </p>
-
+            W
           </div>
 
+          <h1 style={{ fontSize: "42px", margin: "0 0 10px" }}>
+            Welcome back
+          </h1>
 
-          {/* FORM */}
+          <p style={{ color: "#9ca3af", fontSize: "18px" }}>
+            Sign in to your World Sponsor Link account.
+          </p>
+        </div>
 
-          <form
-            onSubmit={handleLogin}
-            className="mt-10 rounded-3xl border border-white/10 bg-white/[0.03] p-7"
-          >
+        <div
+          style={{
+            background: "#090909",
+            border: "1px solid #292929",
+            borderRadius: "24px",
+            padding: "35px",
+          }}
+        >
+          <form onSubmit={handleLogin}>
+            <label
+              style={{
+                display: "block",
+                marginBottom: "10px",
+                fontWeight: "600",
+              }}
+            >
+              Email address
+            </label>
 
-            {/* EMAIL */}
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@example.com"
+              required
+              style={{
+                width: "100%",
+                boxSizing: "border-box",
+                padding: "16px",
+                borderRadius: "14px",
+                border: "1px solid #333",
+                background: "#000",
+                color: "white",
+                fontSize: "16px",
+                marginBottom: "24px",
+              }}
+            />
 
-            <div>
+            <label
+              style={{
+                display: "block",
+                marginBottom: "10px",
+                fontWeight: "600",
+              }}
+            >
+              Password
+            </label>
 
-              <label className="text-sm font-medium text-gray-300">
-                Email address
-              </label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Enter your password"
+              required
+              style={{
+                width: "100%",
+                boxSizing: "border-box",
+                padding: "16px",
+                borderRadius: "14px",
+                border: "1px solid #333",
+                background: "#000",
+                color: "white",
+                fontSize: "16px",
+                marginBottom: "24px",
+              }}
+            />
 
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@example.com"
-                className="mt-2 w-full rounded-xl border border-white/10 bg-black px-4 py-3.5 text-white outline-none transition placeholder:text-gray-600 focus:border-blue-500"
-              />
-
-            </div>
-
-
-            {/* PASSWORD */}
-
-            <div className="mt-5">
-
-              <div className="flex justify-between">
-
-                <label className="text-sm font-medium text-gray-300">
-                  Password
-                </label>
-
-                <button
-                  type="button"
-                  className="text-sm text-blue-500 hover:text-blue-400"
-                >
-                  Forgot password?
-                </button>
-
+            {error && (
+              <div
+                style={{
+                  background: "#2b0808",
+                  border: "1px solid #8b1e1e",
+                  color: "#ff4d4d",
+                  padding: "14px",
+                  borderRadius: "12px",
+                  marginBottom: "20px",
+                }}
+              >
+                {error}
               </div>
-
-              <input
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                className="mt-2 w-full rounded-xl border border-white/10 bg-black px-4 py-3.5 text-white outline-none transition placeholder:text-gray-600 focus:border-blue-500"
-              />
-
-            </div>
-
-
-            {/* LOGIN BUTTON */}
+            )}
 
             <button
               type="submit"
-              className="mt-7 w-full rounded-xl bg-blue-600 py-3.5 font-semibold transition hover:bg-blue-500"
+              disabled={loading}
+              style={{
+                width: "100%",
+                padding: "16px",
+                borderRadius: "14px",
+                border: "none",
+                background: loading ? "#4b22a8" : "#6d00ff",
+                color: "white",
+                fontSize: "18px",
+                fontWeight: "700",
+                cursor: loading ? "not-allowed" : "pointer",
+              }}
             >
-              Sign in →
+              {loading ? "Signing in..." : "Sign in →"}
             </button>
-
-
-            {/* DIVIDER */}
-
-            <div className="my-7 flex items-center gap-4">
-
-              <div className="h-px flex-1 bg-white/10" />
-
-              <span className="text-xs text-gray-500">
-                OR
-              </span>
-
-              <div className="h-px flex-1 bg-white/10" />
-
-            </div>
-
-
-            {/* SIGNUP */}
-
-            <p className="text-center text-sm text-gray-400">
-
-              Don't have an account?{" "}
-
-              <a
-                href="/signup"
-                className="font-semibold text-blue-500 hover:text-blue-400"
-              >
-                Create one
-              </a>
-
-            </p>
-
           </form>
 
+          <div
+            style={{
+              textAlign: "center",
+              marginTop: "28px",
+              color: "#9ca3af",
+            }}
+          >
+            Don't have an account?{" "}
+            <Link
+              href="/signup"
+              style={{
+                color: "#7c4dff",
+                fontWeight: "600",
+                textDecoration: "none",
+              }}
+            >
+              Create one
+            </Link>
+          </div>
 
-          <p className="mt-6 text-center text-xs leading-5 text-gray-600">
-            By continuing, you agree to the WSL Terms of Service
-            and Privacy Policy.
-          </p>
-
+          <div
+            style={{
+              textAlign: "center",
+              marginTop: "20px",
+            }}
+          >
+            <Link
+              href="/"
+              style={{
+                color: "#9ca3af",
+                textDecoration: "none",
+              }}
+            >
+              ← Back to home
+            </Link>
+          </div>
         </div>
-
-      </section>
-
+      </div>
     </main>
   );
 }
