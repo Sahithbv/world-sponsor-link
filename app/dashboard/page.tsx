@@ -1,15 +1,75 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { supabase } from "../../lib/supabase";
+
+type Profile = {
+  full_name: string;
+  account_type: "brand" | "organization";
+};
 
 export default function DashboardPage() {
+  const router = useRouter();
+
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [loggingOut, setLoggingOut] = useState(false);
+
+  useEffect(() => {
+    async function loadProfile() {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        router.push("/login");
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("full_name, account_type")
+        .eq("id", user.id)
+        .single();
+
+      if (error) {
+        console.error(error);
+      } else {
+        setProfile(data);
+      }
+
+      setLoading(false);
+    }
+
+    loadProfile();
+  }, [router]);
+
+  async function handleLogout() {
+    setLoggingOut(true);
+
+    await supabase.auth.signOut();
+
+    router.push("/login");
+  }
+
+  if (loading) {
+    return (
+      <main className="min-h-screen bg-black text-white flex items-center justify-center">
+        <p className="text-gray-400">Loading dashboard...</p>
+      </main>
+    );
+  }
+
+  const firstName = profile?.full_name?.split(" ")[0] || "there";
+
   return (
     <main className="min-h-screen bg-black text-white">
-
       {/* NAVBAR */}
       <nav className="border-b border-zinc-800 bg-black">
         <div className="max-w-7xl mx-auto px-6 py-5 flex items-center justify-between">
-
+          {/* LOGO */}
           <Link href="/" className="flex items-center gap-3">
             <span className="text-2xl font-bold text-blue-500">
               WSL
@@ -20,32 +80,43 @@ export default function DashboardPage() {
             </span>
           </Link>
 
-          <div className="flex items-center gap-6">
-            <button className="text-gray-400 hover:text-white transition">
+          {/* NAV ACTIONS */}
+          <div className="flex items-center gap-3">
+            <Link
+              href="/notifications"
+              className="text-gray-400 hover:text-white transition px-3 py-2"
+            >
               Notifications
-            </button>
+            </Link>
 
-            <button className="border border-zinc-700 rounded-lg px-4 py-2 hover:border-blue-500 transition">
+            <Link
+              href="/profile"
+              className="border border-zinc-700 rounded-lg px-4 py-2 hover:border-blue-500 transition"
+            >
               Profile
+            </Link>
+
+            <button
+              onClick={handleLogout}
+              disabled={loggingOut}
+              className="border border-red-900/50 text-red-400 rounded-lg px-4 py-2 hover:border-red-500 hover:text-red-300 transition disabled:opacity-50"
+            >
+              {loggingOut ? "Logging out..." : "Logout"}
             </button>
           </div>
-
         </div>
       </nav>
 
-
       {/* MAIN */}
       <section className="max-w-7xl mx-auto px-6 py-12">
-
         {/* WELCOME */}
         <div className="mb-12">
-
           <p className="text-blue-500 font-semibold tracking-wide mb-3">
             WORLD SPONSOR LINK
           </p>
 
           <h1 className="text-4xl md:text-5xl font-bold">
-            Welcome to your dashboard.
+            Welcome, {firstName}.
           </h1>
 
           <p className="text-gray-400 mt-4 text-lg max-w-2xl">
@@ -53,12 +124,21 @@ export default function DashboardPage() {
             and build partnerships that matter.
           </p>
 
-        </div>
+          {profile && (
+            <div className="mt-5 inline-flex items-center gap-2 border border-zinc-800 bg-zinc-950 rounded-full px-4 py-2">
+              <span className="text-gray-400 text-sm">
+                Account:
+              </span>
 
+              <span className="text-blue-400 text-sm font-semibold capitalize">
+                {profile.account_type}
+              </span>
+            </div>
+          )}
+        </div>
 
         {/* QUICK ACTIONS */}
         <div className="grid md:grid-cols-3 gap-5 mb-14">
-
           {/* FIND OPPORTUNITIES */}
           <Link
             href="/opportunities"
@@ -82,8 +162,7 @@ export default function DashboardPage() {
             </div>
           </Link>
 
-
-          {/* CREATE */}
+          {/* CREATE OPPORTUNITY */}
           <Link
             href="/create-opportunity"
             className="group bg-zinc-950 border border-zinc-800 rounded-2xl p-7 hover:border-blue-500 hover:bg-blue-500/5 transition"
@@ -106,15 +185,16 @@ export default function DashboardPage() {
             </div>
           </Link>
 
-
           {/* PARTNERSHIPS */}
-          <div className="group bg-zinc-950 border border-zinc-800 rounded-2xl p-7 hover:border-blue-500 transition">
-
+          <Link
+            href="/partnerships"
+            className="group bg-zinc-950 border border-zinc-800 rounded-2xl p-7 hover:border-blue-500 hover:bg-blue-500/5 transition"
+          >
             <div className="text-3xl mb-5">
               🤝
             </div>
 
-            <h2 className="text-xl font-bold">
+            <h2 className="text-xl font-bold group-hover:text-blue-400 transition">
               My Partnerships
             </h2>
 
@@ -123,20 +203,15 @@ export default function DashboardPage() {
               and partnerships in one place.
             </p>
 
-            <div className="text-gray-600 mt-5 font-medium">
-              Coming soon
+            <div className="text-blue-500 mt-5 font-medium">
+              View partnerships →
             </div>
-
-          </div>
-
+          </Link>
         </div>
-
 
         {/* FEATURED OPPORTUNITIES */}
         <div>
-
           <div className="flex items-end justify-between mb-6">
-
             <div>
               <h2 className="text-2xl font-bold">
                 Featured Opportunities
@@ -153,20 +228,19 @@ export default function DashboardPage() {
             >
               View all →
             </Link>
-
           </div>
 
-
           <div className="grid md:grid-cols-3 gap-5">
-
             {/* CARD 1 */}
-            <div className="bg-zinc-950 border border-zinc-800 rounded-2xl p-6 hover:border-zinc-600 transition">
-
+            <Link
+              href="/opportunities"
+              className="group bg-zinc-950 border border-zinc-800 rounded-2xl p-6 hover:border-blue-500 transition"
+            >
               <span className="inline-block text-xs font-medium text-blue-400 bg-blue-500/10 px-3 py-1 rounded-full">
                 College Event
               </span>
 
-              <h3 className="text-xl font-bold mt-5">
+              <h3 className="text-xl font-bold mt-5 group-hover:text-blue-400 transition">
                 Annual Tech Fest
               </h3>
 
@@ -179,17 +253,21 @@ export default function DashboardPage() {
                 Audience: 5,000+
               </div>
 
-            </div>
-
+              <div className="text-blue-500 mt-4 text-sm font-medium">
+                View opportunities →
+              </div>
+            </Link>
 
             {/* CARD 2 */}
-            <div className="bg-zinc-950 border border-zinc-800 rounded-2xl p-6 hover:border-zinc-600 transition">
-
+            <Link
+              href="/opportunities"
+              className="group bg-zinc-950 border border-zinc-800 rounded-2xl p-6 hover:border-blue-500 transition"
+            >
               <span className="inline-block text-xs font-medium text-blue-400 bg-blue-500/10 px-3 py-1 rounded-full">
                 Sports
               </span>
 
-              <h3 className="text-xl font-bold mt-5">
+              <h3 className="text-xl font-bold mt-5 group-hover:text-blue-400 transition">
                 University Football Team
               </h3>
 
@@ -202,17 +280,21 @@ export default function DashboardPage() {
                 Audience: 10,000+
               </div>
 
-            </div>
-
+              <div className="text-blue-500 mt-4 text-sm font-medium">
+                View opportunities →
+              </div>
+            </Link>
 
             {/* CARD 3 */}
-            <div className="bg-zinc-950 border border-zinc-800 rounded-2xl p-6 hover:border-zinc-600 transition">
-
+            <Link
+              href="/opportunities"
+              className="group bg-zinc-950 border border-zinc-800 rounded-2xl p-6 hover:border-blue-500 transition"
+            >
               <span className="inline-block text-xs font-medium text-blue-400 bg-blue-500/10 px-3 py-1 rounded-full">
                 Creator
               </span>
 
-              <h3 className="text-xl font-bold mt-5">
+              <h3 className="text-xl font-bold mt-5 group-hover:text-blue-400 transition">
                 Gaming Creator
               </h3>
 
@@ -225,16 +307,15 @@ export default function DashboardPage() {
                 Audience: 100,000+
               </div>
 
-            </div>
-
+              <div className="text-blue-500 mt-4 text-sm font-medium">
+                View opportunities →
+              </div>
+            </Link>
           </div>
-
         </div>
-
 
         {/* BOTTOM CTA */}
         <div className="mt-16 border border-blue-500/30 bg-blue-500/5 rounded-2xl p-8 md:p-10">
-
           <h2 className="text-2xl md:text-3xl font-bold">
             Ready to find your next partnership?
           </h2>
@@ -250,11 +331,8 @@ export default function DashboardPage() {
           >
             Explore Opportunities
           </Link>
-
         </div>
-
       </section>
-
     </main>
   );
 }
