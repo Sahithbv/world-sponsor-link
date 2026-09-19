@@ -34,6 +34,10 @@ export const metadata: Metadata = {
     "sponsorship marketplace",
   ],
 
+  verification: {
+    google: "EFxqc54yPCM1FbA3Vh2lN5Kyoz3HW4wvc3T_2zDFePQ",
+  },
+
   openGraph: {
     title: "World Sponsor Link | Where Brands Meet Opportunities",
     description:
