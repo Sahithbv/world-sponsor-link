@@ -7,7 +7,6 @@ import { supabase } from "../../../lib/supabase";
 
 type Opportunity = {
   id: string;
-  organization_id: string;
   title: string;
   description: string;
   category: string;
@@ -21,7 +20,7 @@ type Opportunity = {
   status: string;
 };
 
-export default function OpportunityPage() {
+export default function OpportunityDetailsPage() {
   const params = useParams();
   const router = useRouter();
 
@@ -31,13 +30,7 @@ export default function OpportunityPage() {
 
   useEffect(() => {
     async function loadOpportunity() {
-      const id = params.id;
-
-      if (!id || typeof id !== "string") {
-        setError("Invalid opportunity.");
-        setLoading(false);
-        return;
-      }
+      const id = params.id as string;
 
       const { data, error } = await supabase
         .from("opportunities")
@@ -49,21 +42,16 @@ export default function OpportunityPage() {
       if (error) {
         console.error(error);
         setError("Opportunity not found.");
-      } else {
-        setOpportunity(data);
+        setLoading(false);
+        return;
       }
 
+      setOpportunity(data);
       setLoading(false);
     }
 
     loadOpportunity();
   }, [params.id]);
-
-  function formatMoney(amount: number | null) {
-    if (amount === null) return "Not specified";
-
-    return `₹${amount.toLocaleString("en-IN")}`;
-  }
 
   function formatDate(date: string | null) {
     if (!date) return "Not specified";
@@ -75,6 +63,12 @@ export default function OpportunityPage() {
     });
   }
 
+  function formatAmount(amount: number | null) {
+    if (amount === null) return "Not specified";
+
+    return `₹${amount.toLocaleString("en-IN")}`;
+  }
+
   if (loading) {
     return (
       <main
@@ -82,11 +76,13 @@ export default function OpportunityPage() {
           minHeight: "100vh",
           background: "#050505",
           color: "white",
-          padding: "60px 20px",
-          textAlign: "center",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontSize: "20px",
         }}
       >
-        <h1>Loading opportunity...</h1>
+        Loading opportunity...
       </main>
     );
   }
@@ -102,8 +98,8 @@ export default function OpportunityPage() {
           textAlign: "center",
         }}
       >
-        <h1 style={{ fontSize: "36px", marginBottom: "15px" }}>
-          Opportunity not found
+        <h1 style={{ fontSize: "40px", marginBottom: "15px" }}>
+          Opportunity Not Found
         </h1>
 
         <p style={{ color: "#9ca3af", marginBottom: "30px" }}>
@@ -114,15 +110,15 @@ export default function OpportunityPage() {
           href="/opportunities"
           style={{
             display: "inline-block",
+            padding: "14px 22px",
             background: "#6d00ff",
             color: "white",
-            padding: "14px 24px",
             borderRadius: "12px",
             textDecoration: "none",
             fontWeight: "700",
           }}
         >
-          ← Back to opportunities
+          ← Back to Opportunities
         </Link>
       </main>
     );
@@ -136,7 +132,7 @@ export default function OpportunityPage() {
         color: "white",
       }}
     >
-      {/* Navbar */}
+      {/* NAVBAR */}
       <nav
         style={{
           borderBottom: "1px solid #222",
@@ -151,7 +147,7 @@ export default function OpportunityPage() {
           style={{
             color: "white",
             textDecoration: "none",
-            fontSize: "22px",
+            fontSize: "24px",
             fontWeight: "800",
           }}
         >
@@ -161,15 +157,15 @@ export default function OpportunityPage() {
         <Link
           href="/opportunities"
           style={{
-            color: "#9ca3af",
+            color: "#aaa",
             textDecoration: "none",
           }}
         >
-          ← All Opportunities
+          ← Back to Opportunities
         </Link>
       </nav>
 
-      {/* Main content */}
+      {/* CONTENT */}
       <div
         style={{
           maxWidth: "1000px",
@@ -177,195 +173,210 @@ export default function OpportunityPage() {
           padding: "60px 20px",
         }}
       >
-        {/* Category */}
+        {/* CATEGORY */}
         <div
           style={{
             display: "inline-block",
-            background: "#17112e",
+            background: "#16002f",
+            color: "#a855f7",
             border: "1px solid #6d00ff",
-            color: "#a78bfa",
             padding: "8px 14px",
             borderRadius: "999px",
-            marginBottom: "20px",
             fontSize: "14px",
-            fontWeight: "600",
+            fontWeight: "700",
+            marginBottom: "20px",
           }}
         >
           {opportunity.category}
         </div>
 
+        {/* TITLE */}
         <h1
           style={{
             fontSize: "48px",
             lineHeight: "1.1",
-            marginBottom: "20px",
+            margin: "0 0 20px",
           }}
         >
           {opportunity.title}
         </h1>
 
-        {opportunity.location && (
-          <p
-            style={{
-              color: "#9ca3af",
-              fontSize: "18px",
-              marginBottom: "40px",
-            }}
-          >
-            📍 {opportunity.location}
-          </p>
-        )}
+        {/* LOCATION */}
+        <p
+          style={{
+            color: "#aaa",
+            fontSize: "18px",
+            marginBottom: "40px",
+          }}
+        >
+          📍 {opportunity.location || "Location not specified"}
+        </p>
 
-        {/* Information cards */}
+        {/* MAIN GRID */}
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-            gap: "15px",
-            marginBottom: "45px",
+            gridTemplateColumns: "2fr 1fr",
+            gap: "25px",
           }}
         >
-          <InfoCard
-            title="Sponsorship"
-            value={`${formatMoney(
-              opportunity.sponsorship_min
-            )} - ${formatMoney(opportunity.sponsorship_max)}`}
-          />
-
-          <InfoCard
-            title="Expected Audience"
-            value={
-              opportunity.expected_audience
-                ? `${opportunity.expected_audience.toLocaleString(
-                    "en-IN"
-                  )} people`
-                : "Not specified"
-            }
-          />
-
-          <InfoCard
-            title="Event Date"
-            value={formatDate(opportunity.event_date)}
-          />
-
-          <InfoCard
-            title="Application Deadline"
-            value={formatDate(opportunity.deadline)}
-          />
-        </div>
-
-        {/* Description */}
-        <section style={{ marginBottom: "40px" }}>
-          <h2 style={{ fontSize: "28px", marginBottom: "15px" }}>
-            About this opportunity
-          </h2>
-
-          <p
+          {/* LEFT */}
+          <div
             style={{
-              color: "#c4c4c4",
-              fontSize: "17px",
-              lineHeight: "1.8",
-              whiteSpace: "pre-wrap",
+              background: "#090909",
+              border: "1px solid #292929",
+              borderRadius: "20px",
+              padding: "30px",
             }}
           >
-            {opportunity.description}
-          </p>
-        </section>
-
-        {/* Benefits */}
-        {opportunity.benefits && (
-          <section style={{ marginBottom: "45px" }}>
-            <h2 style={{ fontSize: "28px", marginBottom: "15px" }}>
-              Sponsorship benefits
+            <h2 style={{ fontSize: "24px", marginBottom: "15px" }}>
+              About the Opportunity
             </h2>
 
             <p
               style={{
                 color: "#c4c4c4",
-                fontSize: "17px",
+                lineHeight: "1.8",
+                fontSize: "16px",
+                whiteSpace: "pre-wrap",
+              }}
+            >
+              {opportunity.description}
+            </p>
+
+            <h2
+              style={{
+                fontSize: "24px",
+                marginTop: "35px",
+                marginBottom: "15px",
+              }}
+            >
+              Sponsorship Benefits
+            </h2>
+
+            <p
+              style={{
+                color: "#c4c4c4",
                 lineHeight: "1.8",
                 whiteSpace: "pre-wrap",
               }}
             >
-              {opportunity.benefits}
+              {opportunity.benefits || "Benefits have not been specified yet."}
             </p>
-          </section>
-        )}
+          </div>
 
-        {/* Apply button */}
-        <div
-          style={{
-            background: "#0d0818",
-            border: "1px solid #34205c",
-            borderRadius: "20px",
-            padding: "30px",
-            textAlign: "center",
-          }}
-        >
-          <h2 style={{ fontSize: "26px", marginBottom: "10px" }}>
-            Interested in sponsoring this opportunity?
-          </h2>
-
-          <p style={{ color: "#9ca3af", marginBottom: "25px" }}>
-            Submit an application and connect with the organization.
-          </p>
-
-          <button
-            onClick={() => router.push(`/opportunities/${opportunity.id}/apply`)}
+          {/* RIGHT */}
+          <div
             style={{
-              background: "#6d00ff",
-              color: "white",
-              border: "none",
-              borderRadius: "12px",
-              padding: "16px 30px",
-              fontSize: "17px",
-              fontWeight: "700",
-              cursor: "pointer",
+              display: "flex",
+              flexDirection: "column",
+              gap: "20px",
             }}
           >
-            Apply for Sponsorship →
-          </button>
+            {/* SPONSORSHIP */}
+            <div
+              style={{
+                background: "#090909",
+                border: "1px solid #292929",
+                borderRadius: "20px",
+                padding: "25px",
+              }}
+            >
+              <p style={{ color: "#888", marginBottom: "8px" }}>
+                Sponsorship Range
+              </p>
+
+              <h2
+                style={{
+                  fontSize: "25px",
+                  margin: 0,
+                  color: "#a855f7",
+                }}
+              >
+                {formatAmount(opportunity.sponsorship_min)}
+                {" – "}
+                {formatAmount(opportunity.sponsorship_max)}
+              </h2>
+            </div>
+
+            {/* AUDIENCE */}
+            <div
+              style={{
+                background: "#090909",
+                border: "1px solid #292929",
+                borderRadius: "20px",
+                padding: "25px",
+              }}
+            >
+              <p style={{ color: "#888", marginBottom: "8px" }}>
+                Expected Audience
+              </p>
+
+              <h2 style={{ fontSize: "25px", margin: 0 }}>
+                {opportunity.expected_audience
+                  ? opportunity.expected_audience.toLocaleString("en-IN")
+                  : "Not specified"}
+              </h2>
+            </div>
+
+            {/* EVENT DATE */}
+            <div
+              style={{
+                background: "#090909",
+                border: "1px solid #292929",
+                borderRadius: "20px",
+                padding: "25px",
+              }}
+            >
+              <p style={{ color: "#888", marginBottom: "8px" }}>
+                Event Date
+              </p>
+
+              <h3 style={{ fontSize: "20px", margin: 0 }}>
+                {formatDate(opportunity.event_date)}
+              </h3>
+            </div>
+
+            {/* DEADLINE */}
+            <div
+              style={{
+                background: "#090909",
+                border: "1px solid #292929",
+                borderRadius: "20px",
+                padding: "25px",
+              }}
+            >
+              <p style={{ color: "#888", marginBottom: "8px" }}>
+                Application Deadline
+              </p>
+
+              <h3 style={{ fontSize: "20px", margin: 0 }}>
+                {formatDate(opportunity.deadline)}
+              </h3>
+            </div>
+
+            {/* APPLY */}
+            <button
+              onClick={() =>
+                router.push(`/opportunities/${opportunity.id}/apply`)
+              }
+              style={{
+                width: "100%",
+                padding: "18px",
+                borderRadius: "14px",
+                border: "none",
+                background: "#6d00ff",
+                color: "white",
+                fontSize: "18px",
+                fontWeight: "800",
+                cursor: "pointer",
+              }}
+            >
+              Apply for Sponsorship →
+            </button>
+          </div>
         </div>
       </div>
     </main>
-  );
-}
-
-function InfoCard({
-  title,
-  value,
-}: {
-  title: string;
-  value: string;
-}) {
-  return (
-    <div
-      style={{
-        background: "#090909",
-        border: "1px solid #292929",
-        borderRadius: "16px",
-        padding: "22px",
-      }}
-    >
-      <p
-        style={{
-          color: "#8b8b8b",
-          fontSize: "14px",
-          marginBottom: "8px",
-        }}
-      >
-        {title}
-      </p>
-
-      <p
-        style={{
-          fontSize: "18px",
-          fontWeight: "700",
-          margin: 0,
-        }}
-      >
-        {value}
-      </p>
-    </div>
   );
 }

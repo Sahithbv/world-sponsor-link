@@ -1,28 +1,24 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "../../lib/supabase";
 
-export default function LoginPage() {
-  const router = useRouter();
-
+export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-
+  const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  async function handleLogin(e: React.FormEvent) {
+  async function handleReset(e: React.FormEvent) {
     e.preventDefault();
 
+    setMessage("");
     setError("");
     setLoading(true);
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
     });
 
     if (error) {
@@ -31,7 +27,11 @@ export default function LoginPage() {
       return;
     }
 
-    router.push("/dashboard");
+    setMessage(
+      "If an account exists with this email, a password reset link has been sent."
+    );
+
+    setLoading(false);
   }
 
   return (
@@ -46,9 +46,19 @@ export default function LoginPage() {
         padding: "40px 20px",
       }}
     >
-      <div style={{ width: "100%", maxWidth: "520px" }}>
+      <div
+        style={{
+          width: "100%",
+          maxWidth: "520px",
+        }}
+      >
         {/* HEADER */}
-        <div style={{ textAlign: "center", marginBottom: "30px" }}>
+        <div
+          style={{
+            textAlign: "center",
+            marginBottom: "30px",
+          }}
+        >
           <div
             style={{
               width: "68px",
@@ -72,20 +82,21 @@ export default function LoginPage() {
               margin: "0 0 10px",
             }}
           >
-            Welcome back
+            Forgot your password?
           </h1>
 
           <p
             style={{
               color: "#9ca3af",
               fontSize: "18px",
+              lineHeight: "1.6",
             }}
           >
-            Sign in to your World Sponsor Link account.
+            Enter your email and we'll send you a link to reset your password.
           </p>
         </div>
 
-        {/* LOGIN CARD */}
+        {/* CARD */}
         <div
           style={{
             background: "#090909",
@@ -94,7 +105,7 @@ export default function LoginPage() {
             padding: "35px",
           }}
         >
-          <form onSubmit={handleLogin}>
+          <form onSubmit={handleReset}>
             {/* EMAIL */}
             <label
               style={{
@@ -121,59 +132,9 @@ export default function LoginPage() {
                 background: "#000",
                 color: "white",
                 fontSize: "16px",
-                marginBottom: "24px",
+                marginBottom: "20px",
               }}
             />
-
-            {/* PASSWORD */}
-            <label
-              style={{
-                display: "block",
-                marginBottom: "10px",
-                fontWeight: "600",
-              }}
-            >
-              Password
-            </label>
-
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter your password"
-              required
-              style={{
-                width: "100%",
-                boxSizing: "border-box",
-                padding: "16px",
-                borderRadius: "14px",
-                border: "1px solid #333",
-                background: "#000",
-                color: "white",
-                fontSize: "16px",
-                marginBottom: "10px",
-              }}
-            />
-
-            {/* FORGOT PASSWORD */}
-            <div
-              style={{
-                textAlign: "right",
-                marginBottom: "24px",
-              }}
-            >
-              <Link
-                href="/forgot-password"
-                style={{
-                  color: "#7c4dff",
-                  textDecoration: "none",
-                  fontSize: "14px",
-                  fontWeight: "600",
-                }}
-              >
-                Forgot password?
-              </Link>
-            </div>
 
             {/* ERROR */}
             {error && (
@@ -191,7 +152,24 @@ export default function LoginPage() {
               </div>
             )}
 
-            {/* LOGIN BUTTON */}
+            {/* SUCCESS */}
+            {message && (
+              <div
+                style={{
+                  background: "#071f12",
+                  border: "1px solid #166534",
+                  color: "#4ade80",
+                  padding: "14px",
+                  borderRadius: "12px",
+                  marginBottom: "20px",
+                  lineHeight: "1.5",
+                }}
+              >
+                {message}
+              </div>
+            )}
+
+            {/* BUTTON */}
             <button
               type="submit"
               disabled={loading}
@@ -207,46 +185,25 @@ export default function LoginPage() {
                 cursor: loading ? "not-allowed" : "pointer",
               }}
             >
-              {loading ? "Signing in..." : "Sign in →"}
+              {loading ? "Sending..." : "Send Reset Link →"}
             </button>
           </form>
 
-          {/* SIGN UP */}
+          {/* BACK TO LOGIN */}
           <div
             style={{
               textAlign: "center",
-              marginTop: "28px",
-              color: "#9ca3af",
-            }}
-          >
-            Don't have an account?{" "}
-            <Link
-              href="/signup"
-              style={{
-                color: "#7c4dff",
-                fontWeight: "600",
-                textDecoration: "none",
-              }}
-            >
-              Create one
-            </Link>
-          </div>
-
-          {/* HOME */}
-          <div
-            style={{
-              textAlign: "center",
-              marginTop: "20px",
+              marginTop: "25px",
             }}
           >
             <Link
-              href="/"
+              href="/login"
               style={{
                 color: "#9ca3af",
                 textDecoration: "none",
               }}
             >
-              ← Back to home
+              ← Back to login
             </Link>
           </div>
         </div>
